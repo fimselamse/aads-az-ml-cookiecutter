@@ -1,7 +1,6 @@
 {
     "project_name": "project_name",
     "repo_name": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
-    "aws_profile": "default",
-    "python_interpreter": ["python3", "python"],
+    "project_description": "{{ cookiecutter.project_description }}",
     "environment_name": "project_name-env"
 }

@@ -5,12 +5,10 @@ import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import (
-    train_test_split,
-)
-
 from features import transform_data
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 
 
 def parse_args():
@@ -20,15 +18,13 @@ def parse_args():
     parser.add_argument("--n_estimators", type=int, default=100)
     parser.add_argument("--max_depth", type=int, default=5)
     parser.add_argument("--registered_model_name", type=str, default=None)
-    
-
 
     return parser.parse_args()
 
 
 def main():
     # for model flavors that support autologging
-    # mlflow.autolog()
+    mlflow.autolog()
 
     # parse arguments
     args = parse_args()
@@ -57,6 +53,7 @@ def prepare_data(args):
     # split data
     train, test = train_test_split(df, test_size=0.2, random_state=42)
 
+    # define target variable for training
     target = "targe_variable"
 
     X_train = train.drop([target], axis=1)
@@ -69,15 +66,10 @@ def prepare_data(args):
 
 
 def train(args, X_train, y_train):
-    lr = args.learning_rate
-    ne = args.n_estimators
-    max_depth = args.max_depth
-    model = xgb.XGBRegressor(
-        learning_rate=lr,
-        n_estimators=ne,
-        max_depth=max_depth,
-        eval_metric="rmse",
-        enable_categorical=True,
+    model = HistGradientBoostingClassifier(
+        learning_rate=args.lr,
+        max_iter=args.ne,
+        max_depth=args.max_depth,
     )
 
     print("Training Model...")
@@ -91,18 +83,25 @@ def eval(model, X_test, y_test):
     y_pred = model.predict(X_test)
     y_pred = pd.Series(y_pred, index=y_test.index)
 
-    # log primary target metric for sweep
+    # log metrics
+    # NOTE: while autologging may log some metrics, we need to ensure that any metrics
+    # that are used as primary metrics for a sweep is logged manually
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     mlflow.log_metric("rmse", rmse)
 
-    # log feature importance
+    r2 = model.score(X_test, y_test)
+    mlflow.log_metric("r2", r2)
+
+    # log figure
     fig = plt.bar(range(len(model.feature_importances_)), model.feature_importances_)
     mlflow.log_figure(fig, "feature_importance.png")
 
 
-
 def save_model(args, X_test, model):
     print("Saving Model...")
+
+    # NOTE: some flavors do not support autologging, so we need to manually log the model
+
     # manual logging of model
     mlflow.sklearn.log_model(
         sk_model=model,

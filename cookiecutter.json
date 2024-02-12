@@ -2,5 +2,5 @@
     "project_name": "Project name",
     "project_description": "A short description of the project.",
     "repo_name": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
-    "environment_name": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}-env"
+    "environment_name": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"
 }

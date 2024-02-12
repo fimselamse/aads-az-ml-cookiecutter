@@ -1,0 +1,10 @@
+name: {{ cookiecutter.environment_name }}
+channels:
+  - conda-forge
+dependencies:
+  - python==3.8.17
+  - pip>=23.2.1
+  - openssl>=3.0.10
+  - pip:
+    - -r requirements.txt
+    - ipykernel
